@@ -1,0 +1,48 @@
+[/Users/souhei.etou/.nvm/versions/node/v16.14.2/bin/npm run start
+
+ > start
+ > ts-node main.ts
+
+ {
+   'タスク期限': { id: '%3ELBR', name: 'タスク期限', type: 'date', date: {} },
+   'ステータス': {
+     id: 'BHYi',
+     name: 'ステータス',
+     type: 'status',
+     status: { options: [Array], groups: [Array] }
+   },
+   '参考': { id: 'UpBS', name: '参考', type: 'url', url: {} },
+   '作成日時': {
+     id: '%5CV%3F%3B',
+     name: '作成日時',
+     type: 'created_time',
+     created_time: {}
+   },
+   'ポイント': {
+     id: 'b%3FIY',
+     name: 'ポイント',
+     type: 'number',
+     number: { format: 'number' }
+   },
+   '成果物': { id: 'eDgt', name: '成果物', type: 'url', url: {} },
+   '最終更新日時': {
+     id: 'epXc',
+     name: '最終更新日時',
+     type: 'last_edited_time',
+     last_edited_time: {}
+   },
+   '作成者': { id: 'lFQH', name: '作成者', type: 'created_by', created_by: {} },
+   '種類': {
+     id: 'n%7BGS',
+     name: '種類',
+     type: 'select',
+     select: { options: [Array] }
+   },
+   'PRリンク': { id: 'zm%5BS', name: 'PRリンク', type: 'url', url: {} },
+   '担当者': { id: '~N%5DM', name: '担当者', type: 'people', people: {} },
+   '名前': { id: 'title', name: '名前', type: 'title', title: {} }
+ }
+
+ Process finished with exit code 0
+
+
