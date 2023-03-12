@@ -26,8 +26,8 @@ const queryOption: BigQueryOptions = {
 const bigQuery = new BigQuery(queryOption)
 
 // Specify the IDs of the two databases you want to download data from
-const databaseId1 = "161817a46ebd4abab1be2270eaf8fa0a";
-const databaseId2 = "053a48a881ab4b088124e6ad5ebac2fb";
+const databaseId1 = process.env.NOTION_DATASET_ID1;
+const databaseId2 = process.env.NOTION_DATASET_ID2;
 
 const EXPORT_FILE_NAME = "test.csv"
 
