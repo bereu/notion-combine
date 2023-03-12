@@ -3,6 +3,7 @@
     "start": "ts-node main.ts"
   },
   "dependencies": {
+    "@google-cloud/bigquery": "^6.1.0",
     "@notionhq/client": "^2.2.0",
     "dotenv": "^16.0.2",
     "nodejs-polars": "^0.7.2",

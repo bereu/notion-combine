@@ -1,16 +1,17 @@
 import PageDomain from "./pageDomain";
+import {Datetime} from "nodejs-polars";
 
-type MatrixForDatFlame = {
+type TaskMatrixForDatFlame = {
     pageId: any[]
-    sprintID: any[]
+    sprintId: any[]
     sprint: any[]
-    dueDate: any[]
+    dueDate: Array<Date | null>
     status: any[]
     reference: any[]
-    createdAt: any[]
+    createdAt: Array<Date | null>
     story: any[]
     point: any[]
-    modifiedAt: any[]
+    modifiedAt: Array<Date | null>
     type: any[]
     PRURL: any[]
     assign: any[]
@@ -28,10 +29,10 @@ export default class PagesDomain{
     }
 
 
-    get matrixForDataFlame(): MatrixForDatFlame {
-        const result: MatrixForDatFlame = {
+    get matrixForDataFlame(): TaskMatrixForDatFlame {
+        const result: TaskMatrixForDatFlame = {
             pageId: [],
-            sprintID: [],
+            sprintId: [],
             sprint: [],
             dueDate: [],
             status: [],
@@ -49,7 +50,7 @@ export default class PagesDomain{
 
         this.#list.forEach(pageDomain => {
             result.pageId.push(pageDomain.pageId)
-            result.sprintID.push(pageDomain.sprintID)
+            result.sprintId.push(pageDomain.sprintID)
             result.sprint.push(pageDomain.sprint)
             result.dueDate.push(pageDomain.dueDate)
             result.status.push(pageDomain.status)
@@ -62,23 +63,6 @@ export default class PagesDomain{
             result.PRURL.push(pageDomain.PRURL)
             result.assign.push(pageDomain.assign)
             result.title.push(pageDomain.title)
-        })
-
-        console.log({
-            pageId: result.pageId.length,
-            sprintID: result.sprintID.length,
-            sprint: result.sprint.length,
-            dueDate: result.dueDate.length,
-            status: result.status.length,
-            reference: result.reference.length,
-            createdAt: result.createdAt.length,
-            story: result.story.length,
-            point: result.point.length,
-            modifiedAt: result.modifiedAt.length,
-            type: result.type.length,
-            PRURL: result.PRURL.length,
-            assign: result.assign.length,
-            title: result.title.length,
         })
 
         return result

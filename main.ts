@@ -2,52 +2,34 @@ import {Client} from "@notionhq/client";
 import * as dotenv from 'dotenv'
 import PagesDomain from "./domain/pagesDomain";
 import PageDomain from "./domain/pageDomain";
+import { BigQuery, BigQueryOptions } from '@google-cloud/bigquery';
 dotenv.config()
 
 import * as po from 'nodejs-polars'
 import {DataFrame, Series} from "nodejs-polars";
 import {DataType} from "nodejs-polars/bin/datatypes";
 import * as fs from "fs";
+import {SprintPageDomain} from "./domain/sprintPageDomain";
+import {SprintPagesDomain} from "./domain/sprintPagesDomain";
+import {TABLE_SCHEMA} from "./bq/schema";
 
 
 
-
-// async function main() {
-//
-//
-//     const result = await notion.databases.query({
-//
-//         database_id: task_management_board_id,
-//         filter: {
-//             property: "ステータス",
-//             status: {
-//                 equals: "BACKLOG"
-//             }
-//         }
-//     });
-//
-//     const pages = [...result.results];
-//
-//
-//
-//     // @ts-ignore
-//     const pageDomainList = pages.map(page => new PageDomain(page));
-//     const pagesDomain = new PagesDomain(pageDomainList);
-//
-//     console.log(pagesDomain.list[0].status);
-//
-//
-// }
 
 
 
 // Initialize a new Notion client with your API key
 const notion = new Client({ auth: process.env.NOTION_TOKEN });
+const queryOption: BigQueryOptions = {
+    projectId: process.env.PROJECT_ID
+}
+const bigQuery = new BigQuery(queryOption)
 
 // Specify the IDs of the two databases you want to download data from
 const databaseId1 = "161817a46ebd4abab1be2270eaf8fa0a";
 const databaseId2 = "053a48a881ab4b088124e6ad5ebac2fb";
 
+const EXPORT_FILE_NAME = "test.csv"
 
 async function downloadDatabase(databaseId:string) {
     // Initialize an empty array to hold all the pages
@@ -91,6 +73,7 @@ async function downloadTaskDatabase(): Promise<DataFrame> {
 
     });
     const matrix = new PagesDomain(data).matrixForDataFlame
+    console.log(matrix);
     // @ts-ignore
     return new DataFrame(matrix);
 }
@@ -102,25 +85,13 @@ async function joinData(
     relationPropertyName: string,
     pageIdPropertyName: string
 ): Promise<DataFrame> {
-    // Retrieve the relation property from the first database
-    const relationProperty = database1.select(relationPropertyName);
 
-    // Retrieve the IDs of the related pages from the first database
-
-    const relatedPageIds = relationProperty
-        .unique().toSeries().toArray()
-
-
-    // Filter the data from the second database to only include the related pages
-    const relatedData = database2.filter((row: { get: (arg0: string) => any; }) =>
-        relatedPageIds.includes(row.get(pageIdPropertyName))
-    );
 
     // Merge the data from the first database with the related data from the second database
-    return database1.join(relatedData,{
-        on:pageIdPropertyName,
-        how:"inner",
-    }
+    return database1.join(database2,{
+        on: "sprintId",
+        how: "left",
+        }
     );
 }
 
@@ -130,13 +101,54 @@ async function downloadSprintDatabase(): Promise<DataFrame> {
 
     // const response = await notion.databases.query({ database_id: databaseId });
     const data = allPages.map((page: any) => {
-        return  new PageDomain(page)
+        return  new SprintPageDomain(page)
 
     });
-    const matrix = new PagesDomain(data).matrixForDataFlame
+    const matrix = new SprintPagesDomain(data).matrixForDataFlame()
     // @ts-ignore
     return new DataFrame(matrix);
 }
+
+
+async function loadCSV(fileName: string): Promise<void> {
+    const datasetId = process.env.DATASET_ID;
+    const tableId = process.env.TABLE_ID;
+    const schema = TABLE_SCHEMA;
+
+    if (datasetId === undefined || tableId === undefined) {
+        console.log(datasetId)
+        console.log(tableId)
+        throw  Error("datasetID or tableId are undefined")
+    }
+
+    const [job] = await bigQuery
+        .dataset(datasetId)
+        .table(tableId)
+        .load(EXPORT_FILE_NAME, {
+            schema: schema,
+            writeDisposition: 'WRITE_TRUNCATE',
+            sourceFormat: 'CSV',
+            allowJaggedRows: true,
+            allowQuotedNewlines: true,
+            skipLeadingRows: 1,
+            fieldDelimiter: ',', // replace with your desired delimiter
+        })
+
+
+
+
+    if (job.status === undefined) {
+        throw Error("job status is undefined")
+    }
+
+    console.log(`Job ${job.id} completed.`);
+
+    const errors = job.status.errors;
+    if (errors && errors.length > 0) {
+        throw errors;
+    }
+}
+
 
 
 // Define an async IIFE to download the data and join it
@@ -144,16 +156,21 @@ async function downloadSprintDatabase(): Promise<DataFrame> {
     try {
         // Download the data from both databases
         const database1 = await downloadTaskDatabase();
-        console.log(database1)
-        // const database2 = await downloadDatabase(databaseId2);
+        const database2 = await downloadSprintDatabase();
+        console.log(database2);
+        console.log(database1);
         //
         // // Join the data from both databases
-        // const combinedData = await joinData(
-        //     database1,
-        //     database2,
-        //     "調剤スプリント",
-        //     "sprintID"
-        // );
+        const combinedData = await joinData(
+            database1,
+            database2,
+            "sprintID",
+            "sprintID"
+        );
+
+        console.log(combinedData);
+        await combinedData.writeCSV(EXPORT_FILE_NAME)
+        await loadCSV(EXPORT_FILE_NAME)
         //
         // // Save the DataFrame to a CSV file
         // const csvString = combinedData.writeCSV();
